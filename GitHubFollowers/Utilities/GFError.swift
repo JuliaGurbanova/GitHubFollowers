@@ -1,8 +1,8 @@
 //
-//  ErrorMessage.swift
+//  GFError.swift
 //  GitHubFollowers
 //
-//  Created by Julia Gurbanova on 16.01.2024.
+//  Created by Julia Gurbanova on 17.01.2024.
 //
 
 import Foundation
