@@ -7,7 +7,7 @@
 
 import UIKit
 
-protocol UserInfoViewControllerDelegate: class {
+protocol UserInfoViewControllerDelegate: AnyObject {
     func didRequestFollowers(for username: String)
 }
 
@@ -35,13 +35,16 @@ class UserInfoViewController: GFDataLoadingViewController {
     }
 
     func getUserInfo() {
-        NetworkManager.shared.getUserInfo(for: username) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let user):
-                DispatchQueue.main.async { self.configureUIElements(with: user) }
-            case .failure(let error):
-                self.presentGFAlertOnMainThread(title: "Something went wrong", message: error.rawValue, buttonTitle: "OK")
+        Task {
+            do {
+                let user = try await NetworkManager.shared.getUserInfo(for: username)
+                configureUIElements(with: user)
+            } catch {
+                if let gfError = error as? GFError {
+                    presentGFAlert(title: "Something Went Wrong", message: gfError.rawValue, buttonTitle: "OK")
+                } else {
+                    presentDefaultError()
+                }
             }
         }
     }
@@ -50,7 +53,7 @@ class UserInfoViewController: GFDataLoadingViewController {
         self.add(childVC: GFUserInfoHeaderViewController(user: user), to: self.headerView)
         self.add(childVC: GFRepoItemViewController(user: user, delegate: self), to: self.itemViewOne)
         self.add(childVC: GFFollowerItemViewController(user: user, delegate: self), to: self.itemViewTwo)
-        self.dateLabel.text = "GitHub since \(user.createdAt.convertToMonthYearFormat())"
+        self.dateLabel.text = "GitHub since \(user.createdAt.formatted(.dateTime.month().year()))"
     }
 
     func layoutUI() {
@@ -98,7 +101,7 @@ class UserInfoViewController: GFDataLoadingViewController {
 extension UserInfoViewController: GFRepoItemViewControllerDelegate {
     func didTapGiHubProfile(for user: User) {
         guard let url = URL(string: user.htmlUrl) else {
-            presentGFAlertOnMainThread(title: "Invalid URL", message: "The url attached to this user is invalid.", buttonTitle: "OK")
+            presentGFAlert(title: "Invalid URL", message: "The url attached to this user is invalid.", buttonTitle: "OK")
             return
         }
 
@@ -109,7 +112,7 @@ extension UserInfoViewController: GFRepoItemViewControllerDelegate {
 extension UserInfoViewController: GFFollowerItemViewControllerDelegate {
     func didTapGetFollowers(for user: User) {
         guard user.followers != 0 else {
-            presentGFAlertOnMainThread(title: "No followers", message: "This user has no followers. What a shame 😞.", buttonTitle: "So sad")
+            presentGFAlert(title: "No followers", message: "This user has no followers. What a shame 😞.", buttonTitle: "So sad")
             return
         }
 

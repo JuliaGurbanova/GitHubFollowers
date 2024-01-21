@@ -7,7 +7,7 @@
 
 import UIKit
 
-protocol GFRepoItemViewControllerDelegate: class {
+protocol GFRepoItemViewControllerDelegate: AnyObject {
     func didTapGiHubProfile(for user: User)
 }
 
@@ -32,7 +32,7 @@ class GFRepoItemViewController: GFItemInfoViewController {
     private func configureItems() {
         itemInfoViewOne.set(itemInfoType: .repos, withCount: user.publicRepos)
         itemInfoViewTwo.set(itemInfoType: .gists, withCount: user.publicGists)
-        actionButton.set(backgroundColor: .systemPurple, title: "GitHub Profile")
+        actionButton.set(color: .systemPurple, title: "GitHub Profile", systemImageName: "person")
     }
 
     override func actionButtonTapped() {
